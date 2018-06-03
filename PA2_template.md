@@ -1,0 +1,115 @@
+---
+title: 'Peer-graded Assignment: Course Project 2'
+author: "Sherwood Tang"
+output:
+  html_document:
+    keep_md: yes
+---
+
+
+
+```r
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading and preprocessing the data
+
+1. Load the data
+
+```r
+library(ggplot2)
+storm_data <- read.csv("repdata-data-FStormData.csv")
+```
+
+2. Process/transform the data (if necessary) into a format suitable for your analysis
+
+```r
+tidyNOAA <- storm_data[,c('EVTYPE','FATALITIES','INJURIES', 'PROPDMG', 'PROPDMGEXP', 'CROPDMG', 'CROPDMGEXP')]
+
+tidyNOAA$PROPDMGNUM = 0
+tidyNOAA[tidyNOAA$PROPDMGEXP == "H",]$PROPDMGNUM = tidyNOAA[tidyNOAA$PROPDMGEXP == "H",]$PROPDMG * 10^2
+tidyNOAA[tidyNOAA$PROPDMGEXP == "h",]$PROPDMGNUM = tidyNOAA[tidyNOAA$PROPDMGEXP == "h",]$PROPDMG * 10^2
+tidyNOAA[tidyNOAA$PROPDMGEXP == "K",]$PROPDMGNUM = tidyNOAA[tidyNOAA$PROPDMGEXP == "K",]$PROPDMG * 10^3
+tidyNOAA[tidyNOAA$PROPDMGEXP == "k",]$PROPDMGNUM = tidyNOAA[tidyNOAA$PROPDMGEXP == "k",]$PROPDMG * 10^3
+tidyNOAA[tidyNOAA$PROPDMGEXP == "M",]$PROPDMGNUM = tidyNOAA[tidyNOAA$PROPDMGEXP == "M",]$PROPDMG * 10^6
+tidyNOAA[tidyNOAA$PROPDMGEXP == "m",]$PROPDMGNUM = tidyNOAA[tidyNOAA$PROPDMGEXP == "m",]$PROPDMG * 10^6
+tidyNOAA[tidyNOAA$PROPDMGEXP == "B",]$PROPDMGNUM = tidyNOAA[tidyNOAA$PROPDMGEXP == "B",]$PROPDMG * 10^9
+tidyNOAA[tidyNOAA$PROPDMGEXP == "b",]$PROPDMGNUM = tidyNOAA[tidyNOAA$PROPDMGEXP == "b",]$PROPDMG * 10^9
+
+tidyNOAA$CROPDMGNUM = 0
+tidyNOAA[tidyNOAA$CROPDMGEXP == "H",]$CROPDMGNUM = tidyNOAA[tidyNOAA$CROPDMGEXP == "H",]$CROPDMG * 10^2
+tidyNOAA[tidyNOAA$CROPDMGEXP == "h",]$CROPDMGNUM = tidyNOAA[tidyNOAA$CROPDMGEXP == "h",]$CROPDMG * 10^2
+tidyNOAA[tidyNOAA$CROPDMGEXP == "K",]$CROPDMGNUM = tidyNOAA[tidyNOAA$CROPDMGEXP == "K",]$CROPDMG * 10^3
+tidyNOAA[tidyNOAA$CROPDMGEXP == "k",]$CROPDMGNUM = tidyNOAA[tidyNOAA$CROPDMGEXP == "k",]$CROPDMG * 10^3
+tidyNOAA[tidyNOAA$CROPDMGEXP == "M",]$CROPDMGNUM = tidyNOAA[tidyNOAA$CROPDMGEXP == "M",]$CROPDMG * 10^6
+tidyNOAA[tidyNOAA$CROPDMGEXP == "m",]$CROPDMGNUM = tidyNOAA[tidyNOAA$CROPDMGEXP == "m",]$CROPDMG * 10^6
+tidyNOAA[tidyNOAA$CROPDMGEXP == "B",]$CROPDMGNUM = tidyNOAA[tidyNOAA$CROPDMGEXP == "B",]$CROPDMG * 10^9
+tidyNOAA[tidyNOAA$CROPDMGEXP == "b",]$CROPDMGNUM = tidyNOAA[tidyNOAA$CROPDMGEXP == "b",]$CROPDMG * 10^9
+```
+
+## Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+
+1. with respect to fatalities
+
+```r
+fatalities <- aggregate(FATALITIES ~ EVTYPE, data=tidyNOAA, sum)
+fatalities <- fatalities[order(-fatalities$FATALITIES), ][1:10, ]
+fatalities$EVTYPE <- factor(fatalities$EVTYPE, levels = fatalities$EVTYPE)
+
+ggplot(fatalities, aes(x = EVTYPE, y = FATALITIES)) + 
+  geom_bar(stat = "identity", fill = "red", las = 3) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  xlab("Event Type") + ylab("Fatalities") + ggtitle("Number of fatalities caused by top 10 most harmful events")
+```
+
+```
+## Warning: Ignoring unknown parameters: las
+```
+
+![](PA2_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
+2. with respect to injuries
+
+```r
+injuries <- aggregate(INJURIES ~ EVTYPE, data=tidyNOAA, sum)
+injuries <- injuries[order(-injuries$INJURIES), ][1:10, ]
+injuries$EVTYPE <- factor(injuries$EVTYPE, levels = injuries$EVTYPE)
+
+ggplot(injuries, aes(x = EVTYPE, y = INJURIES)) + 
+  geom_bar(stat = "identity", fill = "blue", las = 3) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  xlab("Event Type") + ylab("Injuries") + ggtitle("Number of injuries caused by top 10 most harmful events")
+```
+
+```
+## Warning: Ignoring unknown parameters: las
+```
+
+![](PA2_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
+
+
+## Across the United States, which types of events have the greatest economic consequences?
+ 
+
+
+
+```r
+tidyNOAA$ECONLOSS = tidyNOAA$PROPDMGNUM + tidyNOAA$CROPDMGNUM
+
+
+econloss <- aggregate(ECONLOSS ~ EVTYPE, data=tidyNOAA, sum)
+econloss <- econloss[order(-econloss$ECONLOSS), ][1:10, ]
+econloss$EVTYPE <- factor(econloss$EVTYPE, levels = econloss$EVTYPE)
+
+ggplot(econloss,aes(x=EVTYPE,y=ECONLOSS)) + geom_bar(stat="identity",fill="green",las=3) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  xlab("Event Type") + ylab("Injuries") + ggtitle("Economic losses caused by top 10 most harmful events")
+```
+
+```
+## Warning: Ignoring unknown parameters: las
+```
+
+![](PA2_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
